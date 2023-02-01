@@ -2,6 +2,7 @@
 #include <cmath>
 #include "tgaimage.h"
 #include "wireframe.h"
+#include "rasterization.h"
 
 const int width  = 800;
 const int height = 800;
@@ -12,9 +13,15 @@ int main(int argc, char** argv) {
 	if (argc >= 2) {
 		if (std::string(argv[1]) == "wireframe") {
 			if (argc >= 3) {
-				wireframe(argv[2], &image, width, height);
+				wireframe(argv[2], image, width, height);
 			} else {
-				wireframe("obj/african_head.obj", &image, width, height);
+				wireframe("obj/african_head.obj", image, width, height);
+			}
+		} else if (std::string(argv[1]) == "rasterization") {
+			if (argc >= 3) {
+				triangle_rasterization(argv[2], image, width, height);
+			} else {
+				triangle_rasterization("obj/african_head.obj", image, width, height);
 			}
 		}
 	}
