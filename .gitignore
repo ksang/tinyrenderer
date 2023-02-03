@@ -32,3 +32,5 @@
 *.app
 main
 *.tga
+
+.vscode
