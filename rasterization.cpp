@@ -85,10 +85,13 @@ void write_depth( TGAImage &depth, std::vector<double> &zbuffer, int width, int 
 
 void triangle_rasterization(const char* obj_file, TGAImage &image, TGAImage &depth, int width, int height) {
     Model *model = new Model(obj_file);
+    TGAImage tex = model->diffuse();
     std::vector<double> zbuffer(width*height, std::numeric_limits<double>::min());
     for (int i=0; i<model->nfaces(); i++) {
         vec3 screen_coords[3];
         vec3 world_coords[3]; 
+        vec2 uv = model->uv(i, 0);
+        TGAColor color = tex.get(uv[0] * tex.width(), uv[1] * tex.height());
         for (int j=0; j<3; j++) { 
             vec3 v = model->vert(i, j); 
             screen_coords[j] = vec3{(v.x+1.)*width/2.+.5, (v.y+1.)*height/2.+.5, v.z};
@@ -99,7 +102,8 @@ void triangle_rasterization(const char* obj_file, TGAImage &image, TGAImage &dep
         
         float intensity = n*light_dir;
         if(intensity > 0) {
-            orthogonal_triangle(screen_coords, zbuffer, image, TGAColor{{std::uint8_t(intensity*255), std::uint8_t(intensity*255), std::uint8_t(intensity*255), 255}}); 
+            TGAColor lcolor = {{uint8_t(color.bgra[0]*intensity), uint8_t(color.bgra[1]*intensity), uint8_t(color.bgra[2]*intensity), 255}};
+            orthogonal_triangle(screen_coords, zbuffer, image, lcolor); 
         }
     }
     write_depth(depth, zbuffer, width, height);
