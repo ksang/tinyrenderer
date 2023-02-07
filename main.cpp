@@ -9,24 +9,25 @@ const int height = 800;
 
 int main(int argc, char** argv) {
 	TGAImage image(width, height, TGAImage::RGB);
+	TGAImage depth_image(width, height, TGAImage::RGB);
 	
 	if (argc >= 2) {
 		if (std::string(argv[1]) == "wireframe") {
 			if (argc >= 3) {
 				wireframe(argv[2], image, width, height);
 			} else {
-				wireframe("obj/african_head.obj", image, width, height);
+				wireframe("obj/african_head/african_head.obj", image, width, height);
 			}
 		} else if (std::string(argv[1]) == "rasterization") {
 			if (argc >= 3) {
-				triangle_rasterization(argv[2], image, width, height);
+				triangle_rasterization(argv[2], image, depth_image, width, height);
 			} else {
-				triangle_rasterization("obj/african_head.obj", image, width, height);
+				triangle_rasterization("obj/african_head/african_head.obj", image, depth_image, width, height);
 			}
 		}
 	}
-	image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
 	image.write_tga_file("output.tga");
+	depth_image.write_tga_file("depth.tga");
 	return 0;
 }
 

@@ -1,6 +1,6 @@
 #include "wireframe.h"
 
-void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) {
+void line(vec2 p0, vec2 p1, TGAImage &image, TGAColor color) {
     bool steep = false; 
     // If the line is steep ( >45 deg), swap x and y for later looping variable.
     // This will avoid small looping iterations and holes in the line.
@@ -32,19 +32,19 @@ void line(Vec2i p0, Vec2i p1, TGAImage &image, TGAColor color) {
         } 
     } 
 }
+TGAColor white = TGAColor{{255, 255, 255, 255}};
 
 void wireframe(const char* obj_file, TGAImage &image, int width, int height) {
     Model *model = new Model(obj_file);
     for (int i=0; i<model->nfaces(); i++) {
-        std::vector<int> face = model->face(i);
         for (int j=0; j<3; j++) {
-            Vec3f v0 = model->vert(face[j]);
-            Vec3f v1 = model->vert(face[(j+1)%3]);
-            int x0 = (v0.x+1.)*width/2.;
-            int y0 = (v0.y+1.)*height/2.;
-            int x1 = (v1.x+1.)*width/2.;
-            int y1 = (v1.y+1.)*height/2.;
-            line(Vec2i(x0, y0), Vec2i(x1, y1), image, white);
+            vec3 v0 = model->vert(i, j);
+            vec3 v1 = model->vert(i, (j+1)%3);
+            double x0 = (v0.x+1.)*width/2.;
+            double y0 = (v0.y+1.)*height/2.;
+            double x1 = (v1.x+1.)*width/2.;
+            double y1 = (v1.y+1.)*height/2.;
+            line(vec2{x0, y0}, vec2{x1, y1}, image, white);
         }
     }
     delete model;
