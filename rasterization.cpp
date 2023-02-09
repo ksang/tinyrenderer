@@ -45,8 +45,9 @@ void triangle(const vec4 clip_verts[3], IShader &shader, TGAImage &image, std::v
 }
 
 vec3 light_dir{0,0,-1}; // define light_dir
+vec3 camera{0,0,3};     // define camera location
 
-void orthogonal_triangle(vec3 *pts, std::vector<double> &zbuffer, TGAImage &image, TGAColor color) {
+void basic_triangle(vec3 *pts, std::vector<double> &zbuffer, TGAImage &image, TGAColor color) {
     vec2 bboxmin{std::numeric_limits<double>::max(),  std::numeric_limits<double>::max()};
     vec2 bboxmax{-std::numeric_limits<double>::max(), -std::numeric_limits<double>::max()};
     vec2 clamp{static_cast<double>(image.width()-1), static_cast<double>(image.height()-1)};
@@ -83,9 +84,25 @@ void write_depth( TGAImage &depth, std::vector<double> &zbuffer, int width, int 
     }
 }
 
+vec3 m2v(mat<4,1> m) {
+    return vec3{m[0][0]/m[3][0], m[1][0]/m[3][0], m[2][0]/m[3][0]};
+}
+
+mat<4,1> v2m(vec3 v) {
+    mat<4,1> m;
+    m[0][0] = v.x;
+    m[1][0] = v.y;
+    m[2][0] = v.z;
+    m[3][0] = 1.f;
+    return m;
+}
+
 void triangle_rasterization(const char* obj_file, TGAImage &image, TGAImage &depth, int width, int height) {
     Model *model = new Model(obj_file);
     TGAImage tex = model->diffuse();
+    viewport(width/8, height/8, width*3/4, height*3/4);
+    Projection = mat<4,4>::identity();
+    Projection[3][2] = -1.f/camera.z;
     std::vector<double> zbuffer(width*height, std::numeric_limits<double>::min());
     for (int i=0; i<model->nfaces(); i++) {
         vec3 screen_coords[3];
@@ -94,7 +111,8 @@ void triangle_rasterization(const char* obj_file, TGAImage &image, TGAImage &dep
         TGAColor color = tex.get(uv[0] * tex.width(), uv[1] * tex.height());
         for (int j=0; j<3; j++) { 
             vec3 v = model->vert(i, j); 
-            screen_coords[j] = vec3{(v.x+1.)*width/2.+.5, (v.y+1.)*height/2.+.5, v.z};
+            // screen_coords[j] = vec3{(v.x+1.)*width/2.+.5, (v.y+1.)*height/2.+.5, v.z};
+            screen_coords[j] =  m2v(Viewport*Projection*v2m(v));
             world_coords[j] = v;
         }
         vec3 n = cross(world_coords[2]-world_coords[0], world_coords[1]-world_coords[0]);
@@ -103,7 +121,7 @@ void triangle_rasterization(const char* obj_file, TGAImage &image, TGAImage &dep
         float intensity = n*light_dir;
         if(intensity > 0) {
             TGAColor lcolor = {{uint8_t(color.bgra[0]*intensity), uint8_t(color.bgra[1]*intensity), uint8_t(color.bgra[2]*intensity), 255}};
-            orthogonal_triangle(screen_coords, zbuffer, image, lcolor); 
+            basic_triangle(screen_coords, zbuffer, image, lcolor); 
         }
     }
     write_depth(depth, zbuffer, width, height);
